@@ -30,6 +30,8 @@ doSomething	KEYWORD2
 setBoilerStatus	KEYWORD2
 setBoilerTemperature	KEYWORD2
 getBoilerTemperature	KEYWORD2
+setVentilationCapacity	KEYWORD2
+getVentilationCapacity	KEYWORD2
 
 #######################################
 # Instances (KEYWORD2)

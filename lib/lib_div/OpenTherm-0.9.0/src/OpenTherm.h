@@ -82,6 +82,11 @@ enum OpenThermMessageID {
 	TdhwSet = 56, // f8.8  DHW setpoint (°C)    (Remote parameter 1)
 	MaxTSet, // f8.8  Max CH water setpoint (°C)  (Remote parameters 2)
 	Hcratio, // f8.8  OTC heat curve ratio (°C)  (Remote parameter 3)
+	ControlSetpointVH = 71,
+	SupplyInletTemp = 80,
+	ExhaustInletTemp = 82,
+	RelativeVentilation = 77,
+	TSPEntryVH = 89,
 	RemoteOverrideFunction = 100, // flag8 / -  Function of manual and program changes in master and remote room setpoint.
 	OEMDiagnosticCode = 115, // u16  OEM-specific diagnostic/service code
 	BurnerStarts, // u16  Number of starts burner
@@ -139,7 +144,9 @@ public:
 	//requests
 	unsigned long buildSetBoilerStatusRequest(bool enableCentralHeating, bool enableHotWater = false, bool enableCooling = false, bool enableOutsideTemperatureCompensation = false, bool enableCentralHeating2 = false);
 	unsigned long buildSetBoilerTemperatureRequest(float temperature);
+	unsigned long buildSetVentilationCapacityRequest(float temperature);
 	unsigned long buildGetBoilerTemperatureRequest();
+	unsigned long buildGetVentilationCapacityRequest();
 	unsigned long buildSetHotWaterTemperatureRequest(float temperature);
 	unsigned long buildSlaveConfigurationRequest();
 
@@ -154,12 +161,15 @@ public:
 	static uint16_t getUInt(const unsigned long response);
 	static float getFloat(const unsigned long response);
 	static unsigned int temperatureToData(float temperature);
+	static unsigned int ventilationCapacityToData(float ventilation_capacity);
 
 	//basic requests
 	unsigned long setBoilerStatus(bool enableCentralHeating, bool enableHotWater = false, bool enableCooling = false, bool enableOutsideTemperatureCompensation = false, bool enableCentralHeating2 = false);
 	bool setBoilerTemperature(float temperature);
+	bool setVentilationCapacity(float ventilation_capacity);
 	bool setHotWaterTemperature(float temperature);
 	float getBoilerTemperature();
+	float getVentilationCapacity();
     float getReturnTemperature();
     float getModulation();
     float getPressure();

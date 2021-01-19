@@ -24,6 +24,7 @@
 // Temperature tolerance. If temperature setpoint difference is less than the value,
 // OT (1)(Control setpoint) command will be skipped
 #define OPENTHERM_BOILER_SETPOINT_TOLERANCE 1.0
+#define OPENTHERM_VENTILATION_CAPACITY_SETPOINT_TOLERANCE 1.0
 
 typedef union {
     uint8_t m_flags;
@@ -83,6 +84,14 @@ OpenThermCommand sns_opentherm_commands[] = {
      .m_ot_make_request = sns_opentherm_set_boiler_dhw_temperature,
      .m_ot_parse_response = sns_opentherm_parse_boiler_dhw_temperature,
      .m_ot_appent_telemetry = sns_opentherm_tele_boiler_dhw_temperature},
+    {// Set Ventilation Capacity
+     .m_command_name = "VTCAP",
+     .m_command_code = 0,
+     .m_flags = 0,
+     .m_results = {{.m_u8 = 0}, {.m_u8 = 0}},
+     .m_ot_make_request = sns_opentherm_set_ventilation_capacity,
+     .m_ot_parse_response = sns_opentherm_parse_set_ventilation_capacity,
+     .m_ot_appent_telemetry = sns_opentherm_tele_ventilation_capacity},
     {// Read Application-specific fault flags and OEM fault code
      .m_command_name = "ASFF",
      .m_command_code = 0,
@@ -114,6 +123,14 @@ OpenThermCommand sns_opentherm_commands[] = {
      .m_results = {{.m_u8 = 0}, {.m_u8 = 0}},
      .m_ot_make_request = sns_opentherm_get_generic_float,
      .m_ot_parse_response = sns_opentherm_parse_boiler_temperature,
+     .m_ot_appent_telemetry = sns_opentherm_tele_generic_float},
+    {// Read Ventilation Capacity
+     .m_command_name = "VT",
+     .m_command_code = (uint8_t)OpenThermMessageID::RelativeVentilation,
+     .m_flags = 0,
+     .m_results = {{.m_u8 = 0}, {.m_u8 = 0}},
+     .m_ot_make_request = sns_opentherm_get_generic_float,
+     .m_ot_parse_response = sns_opentherm_parse_ventilation_capacity,
      .m_ot_appent_telemetry = sns_opentherm_tele_generic_float},
     {// Read DHW temperature
      .m_command_name = "TDHW",
@@ -232,6 +249,10 @@ void sns_opentherm_parse_set_boiler_temperature(struct OpenThermCommandT *self, 
 {
     self->m_results[1].m_float = OpenTherm::getFloat(response);
 }
+void sns_opentherm_parse_set_ventilation_capacity(struct OpenThermCommandT *self, struct OT_BOILER_STATUS_T *boilerStatus, unsigned long response)
+{
+    self->m_results[1].m_float = OpenTherm::getFloat(response);
+}
 void sns_opentherm_tele_boiler_temperature(struct OpenThermCommandT *self)
 {
     char requested[FLOATSZ];
@@ -268,6 +289,27 @@ unsigned long sns_opentherm_set_boiler_dhw_temperature(struct OpenThermCommandT 
     unsigned int data = OpenTherm::temperatureToData(status->m_hotWaterSetpoint);
     return OpenTherm::buildRequest(OpenThermMessageType::WRITE_DATA, OpenThermMessageID::TdhwSet, data);
 }
+
+/////////////////////////////////// Set Ventilation Capacity Percentage //////////////////////////////////////////////////
+unsigned long sns_opentherm_set_ventilation_capacity(struct OpenThermCommandT *self, struct OT_BOILER_STATUS_T *status)
+{
+    // The same consideration as for the boiler temperature
+    float diff = abs(status->m_ventilationCapacitySetpoint - self->m_results[0].m_float);
+    // Ignore small changes in the boiler setpoint temperature
+    if (diff < OPENTHERM_VENTILATION_CAPACITY_SETPOINT_TOLERANCE)
+    {
+        return -1;
+    }
+    AddLog_P(LOG_LEVEL_INFO,
+              PSTR("[OTH]: Ventilation Capacity. Old: %d, New: %d"),
+              (int)self->m_results[0].m_float,
+              (int)status->m_ventilationCapacitySetpoint);
+
+    self->m_results[0].m_float = status->m_ventilationCapacitySetpoint;
+
+    unsigned int data = OpenTherm::ventilationCapacityToData(status->m_ventilationCapacitySetpoint);
+    return OpenTherm::buildRequest(OpenThermMessageType::WRITE_DATA, OpenThermMessageID::ControlSetpointVH, data);
+}
 void sns_opentherm_parse_boiler_dhw_temperature(struct OpenThermCommandT *self, struct OT_BOILER_STATUS_T *boilerStatus, unsigned long response)
 {
     self->m_results[1].m_float = OpenTherm::getFloat(response);
@@ -283,6 +325,19 @@ void sns_opentherm_tele_boiler_dhw_temperature(struct OpenThermCommandT *self)
                      requested,
                      actual);
 }
+
+void sns_opentherm_tele_ventilation_capacity(struct OpenThermCommandT *self)
+{
+    char requested[FLOATSZ];
+    dtostrfd(self->m_results[0].m_float, Settings.flag2.temperature_resolution, requested);
+    char actual[FLOATSZ];
+    dtostrfd(self->m_results[1].m_float, Settings.flag2.temperature_resolution, actual);
+
+    ResponseAppend_P(PSTR("{\"REQ\":%s,\"ACT\": %s}"),
+                     requested,
+                     actual);
+}
+
 
 /////////////////////////////////// App Specific Fault Flags //////////////////////////////////////////////////
 unsigned long sns_opentherm_get_flags(struct OpenThermCommandT *self, struct OT_BOILER_STATUS_T *)
@@ -362,6 +417,11 @@ void sns_opentherm_parse_boiler_temperature(struct OpenThermCommandT *self, stru
     boilerStatus->m_boiler_temperature_read = self->m_results[0].m_float;
 }
 
+void sns_opentherm_parse_ventilation_capacity(struct OpenThermCommandT *self, struct OT_BOILER_STATUS_T *boilerStatus, unsigned long response)
+{
+    self->m_results[0].m_float = OpenTherm::getFloat(response);
+    boilerStatus->m_ventilation_capacity_read = self->m_results[0].m_float;
+}
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////

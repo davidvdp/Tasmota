@@ -1,3 +1,23 @@
+# Brink Renovent Excellent Opentherm Extension
+
+Adds the functionality of setting and getting ventilation capacity for Brink Renovent Excellent type heat recovery units. I added the possibility to set ventilation capacity to the Opentherm implementation already available in Tasmota.
+
+Check [tasmota OpenTherm documentation](https://tasmota.github.io/docs/OpenTherm/) for more information. 
+
+Use following commands to set and get the ventilation capacity of the unit.
+
+**To get the current ventilation capacity:**
+
+`ot_cventilation`
+
+**To set the ventilation capactity:**
+
+`ot_cventilation 25`
+
+Ventilation capacity should be between 0 and 100.
+
+# TASMOTA Readme:
+
 ![Tasmota logo](/tools/logo/TASMOTA_FullLogo_Vector.svg)
 
 Alternative firmware for [ESP8266](https://en.wikipedia.org/wiki/ESP8266) based devices with **easy configuration using webUI, OTA updates, automation using timers or rules, expandability and entirely local control over MQTT, HTTP, Serial or KNX**.

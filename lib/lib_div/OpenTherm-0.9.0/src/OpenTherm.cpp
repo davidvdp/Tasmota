@@ -309,12 +309,21 @@ unsigned long OpenTherm::buildSetBoilerTemperatureRequest(float temperature) {
 	return buildRequest(OpenThermMessageType::WRITE_DATA, OpenThermMessageID::TSet, data);
 }
 
+unsigned long OpenTherm::buildSetVentilationCapacityRequest(float ventilation_capacity) {
+	unsigned int data = ventilationCapacityToData(ventilation_capacity);
+	return buildRequest(OpenThermMessageType::WRITE_DATA, OpenThermMessageID::ControlSetpointVH, data);
+}
+
 unsigned long OpenTherm::buildSetHotWaterTemperatureRequest(float temperature) {
 	unsigned int data = temperatureToData(temperature);
 	return buildRequest(OpenThermMessageType::WRITE_DATA, OpenThermMessageID::TdhwSet, data);
 }
 
 unsigned long OpenTherm::buildGetBoilerTemperatureRequest() {
+	return buildRequest(OpenThermMessageType::READ_DATA, OpenThermMessageID::Tboiler, 0);
+}
+
+unsigned long OpenTherm::buildGetVentilationCapacityRequest() {
 	return buildRequest(OpenThermMessageType::READ_DATA, OpenThermMessageID::Tboiler, 0);
 }
 
@@ -365,6 +374,11 @@ unsigned int OpenTherm::temperatureToData(float temperature) {
 	return data;
 }
 
+unsigned int OpenTherm::ventilationCapacityToData(float ventilation_capacity) {
+	unsigned int data = (unsigned int)(ventilation_capacity);
+	return data;
+}
+
 //basic requests
 
 unsigned long OpenTherm::setBoilerStatus(bool enableCentralHeating, bool enableHotWater, bool enableCooling, bool enableOutsideTemperatureCompensation, bool enableCentralHeating2) {
@@ -376,6 +390,11 @@ bool OpenTherm::setBoilerTemperature(float temperature) {
 	return isValidResponse(response);
 }
 
+bool OpenTherm::setVentilationCapacity(float ventilation_capacity) {
+	unsigned long response = sendRequest(buildSetVentilationCapacityRequest(ventilation_capacity));
+	return isValidResponse(response);
+}
+
 bool OpenTherm::setHotWaterTemperature(float temperature) {
 	unsigned long response = sendRequest(buildSetHotWaterTemperatureRequest(temperature));
 	return isValidResponse(response);
@@ -383,6 +402,11 @@ bool OpenTherm::setHotWaterTemperature(float temperature) {
 
 float OpenTherm::getBoilerTemperature() {
 	unsigned long response = sendRequest(buildGetBoilerTemperatureRequest());
+	return isValidResponse(response) ? getFloat(response) : 0;
+}
+
+float OpenTherm::getVentilationCapacity() {
+	unsigned long response = sendRequest(buildGetVentilationCapacityRequest());
 	return isValidResponse(response) ? getFloat(response) : 0;
 }
 

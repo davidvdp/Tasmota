@@ -104,10 +104,13 @@ typedef struct OT_BOILER_STATUS_T
     float m_flame_modulation_read;
     // Boiler Temperature
     float m_boiler_temperature_read;
+    // ventilation capacity
+    float m_ventilation_capacity_read;
 
     // Boiler desired values
     float m_boilerSetpoint;
     float m_hotWaterSetpoint;
+    float m_ventilationCapacitySetpoint;
 
 } OT_BOILER_STATUS;
 
@@ -148,6 +151,7 @@ void sns_opentherm_init_boiler_status()
 
     sns_ot_boiler_status.m_boilerSetpoint = (float)Settings.ot_boiler_setpoint;
     sns_ot_boiler_status.m_hotWaterSetpoint = (float)Settings.ot_hot_water_setpoint;
+    sns_ot_boiler_status.m_ventilationCapacitySetpoint = (float)25.0;
 
     sns_ot_boiler_status.m_fault_code = 0;
     sns_ot_boiler_status.m_oem_fault_code = 0;
@@ -155,6 +159,7 @@ void sns_opentherm_init_boiler_status()
     sns_ot_boiler_status.m_hotWaterSetpoint_read = 0;
     sns_ot_boiler_status.m_flame_modulation_read = 0;
     sns_ot_boiler_status.m_boiler_temperature_read = 0;
+    sns_ot_boiler_status.m_ventilation_capacity_read = 0;
 }
 
 void ICACHE_RAM_ATTR sns_opentherm_handleInterrupt()
@@ -264,6 +269,10 @@ void sns_opentherm_stat(bool json)
         WSContentSend_P(PSTR("{s}Boiler Temp/Setpnt{m}%d / %d{e}"),
                         (int)sns_ot_boiler_status.m_boiler_temperature_read,
                         (int)sns_ot_boiler_status.m_boilerSetpoint);
+                        
+        WSContentSend_P(PSTR("{s}Ventilation Capacity{m}%d / %d{e}"),
+                        (int)sns_ot_boiler_status.m_ventilation_capacity_read,
+                        (int)sns_ot_boiler_status.m_ventilationCapacitySetpoint);
 
         if (OpenTherm::isCentralHeatingActive(sns_ot_boiler_status.m_slave_raw_status))
         {
@@ -437,6 +446,7 @@ uint8_t sns_opentherm_read_flags(char *data, uint32_t len)
 // set the boiler temperature (CH). Sutable for the PID app.
 // After restart will use the defaults from the settings
 #define D_CMND_OTHERM_BOILER_SETPOINT "tboiler"
+#define D_CMND_OTHERM_VENTILATION_SETPOINT "cventilation"
 // set hot water (DHW) temperature. Do not write it in the flash memory.
 // suitable for the temporary changes
 #define D_CMND_OTHERM_DHW_SETPOINT "twater"
@@ -462,11 +472,12 @@ uint8_t sns_opentherm_read_flags(char *data, uint32_t len)
 // and "ot_ch" is "1", boiler will keep heating
 #define D_CMND_SET_CENTRAL_HEATING_ENABLED "ch"
 
-const char kOpenThermCommands[] PROGMEM = D_PRFX_OTHERM "|" D_CMND_OTHERM_BOILER_SETPOINT "|" D_CMND_OTHERM_DHW_SETPOINT
+const char kOpenThermCommands[] PROGMEM = D_PRFX_OTHERM "|" D_CMND_OTHERM_BOILER_SETPOINT "|" D_CMND_OTHERM_VENTILATION_SETPOINT "|" D_CMND_OTHERM_DHW_SETPOINT
     "|" D_CMND_OTHERM_SAVE_SETTINGS "|" D_CMND_OTHERM_FLAGS "|" D_CMND_SET_CENTRAL_HEATING_ENABLED;
 
 void (*const OpenThermCommands[])(void) PROGMEM = {
     &sns_opentherm_boiler_setpoint_cmd,
+    &sns_opentherm_ventilation_capacity_setpoint_cmd,
     &sns_opentherm_hot_water_setpoint_cmd,
     &sns_opentherm_save_settings_cmd,
     &sns_opentherm_flags_cmd,
@@ -481,6 +492,15 @@ void sns_opentherm_boiler_setpoint_cmd(void)
         sns_ot_boiler_status.m_boilerSetpoint = atof(XdrvMailbox.data);
     }
     ResponseCmndFloat(sns_ot_boiler_status.m_boilerSetpoint, Settings.flag2.temperature_resolution);
+}
+void sns_opentherm_ventilation_capacity_setpoint_cmd(void)
+{
+    bool query = strlen(XdrvMailbox.data) == 0;
+    if (!query)
+    {
+        sns_ot_boiler_status.m_ventilationCapacitySetpoint = atof(XdrvMailbox.data);
+    }
+    ResponseCmndFloat(sns_ot_boiler_status.m_ventilationCapacitySetpoint, Settings.flag2.temperature_resolution);
 }
 
 void sns_opentherm_hot_water_setpoint_cmd(void)
