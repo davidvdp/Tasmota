@@ -324,7 +324,7 @@ unsigned long OpenTherm::buildGetBoilerTemperatureRequest() {
 }
 
 unsigned long OpenTherm::buildGetVentilationCapacityRequest() {
-	return buildRequest(OpenThermMessageType::READ_DATA, OpenThermMessageID::Tboiler, 0);
+	return buildRequest(OpenThermMessageType::READ_DATA, OpenThermMessageID::RelativeVentilation, 0);
 }
 
 unsigned long OpenTherm::buildSlaveConfigurationRequest() {

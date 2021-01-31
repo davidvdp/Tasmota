@@ -105,12 +105,12 @@ typedef struct OT_BOILER_STATUS_T
     // Boiler Temperature
     float m_boiler_temperature_read;
     // ventilation capacity
-    float m_ventilation_capacity_read;
+    uint16_t m_ventilation_capacity_read;
 
     // Boiler desired values
     float m_boilerSetpoint;
     float m_hotWaterSetpoint;
-    float m_ventilationCapacitySetpoint;
+    uint16_t m_ventilationCapacitySetpoint;
 
 } OT_BOILER_STATUS;
 
@@ -151,7 +151,7 @@ void sns_opentherm_init_boiler_status()
 
     sns_ot_boiler_status.m_boilerSetpoint = (float)Settings.ot_boiler_setpoint;
     sns_ot_boiler_status.m_hotWaterSetpoint = (float)Settings.ot_hot_water_setpoint;
-    sns_ot_boiler_status.m_ventilationCapacitySetpoint = (float)25.0;
+    sns_ot_boiler_status.m_ventilationCapacitySetpoint = (uint16_t)25;
 
     sns_ot_boiler_status.m_fault_code = 0;
     sns_ot_boiler_status.m_oem_fault_code = 0;
@@ -498,7 +498,7 @@ void sns_opentherm_ventilation_capacity_setpoint_cmd(void)
     bool query = strlen(XdrvMailbox.data) == 0;
     if (!query)
     {
-        sns_ot_boiler_status.m_ventilationCapacitySetpoint = atof(XdrvMailbox.data);
+        sns_ot_boiler_status.m_ventilationCapacitySetpoint = atoi(XdrvMailbox.data);
     }
     ResponseCmndFloat(sns_ot_boiler_status.m_ventilationCapacitySetpoint, Settings.flag2.temperature_resolution);
 }

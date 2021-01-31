@@ -131,7 +131,7 @@ OpenThermCommand sns_opentherm_commands[] = {
      .m_results = {{.m_u8 = 0}, {.m_u8 = 0}},
      .m_ot_make_request = sns_opentherm_get_generic_float,
      .m_ot_parse_response = sns_opentherm_parse_ventilation_capacity,
-     .m_ot_appent_telemetry = sns_opentherm_tele_generic_float},
+     .m_ot_appent_telemetry = sns_opentherm_tele_generic_uint16_t},
     {// Read DHW temperature
      .m_command_name = "TDHW",
      .m_command_code = (uint8_t)OpenThermMessageID::Tdhw,
@@ -398,6 +398,16 @@ void sns_opentherm_tele_generic_float(struct OpenThermCommandT *self)
     ResponseAppend_P(PSTR("%s"), str);
 }
 
+void sns_opentherm_parse_generic_uint16_t(struct OpenThermCommandT *self, struct OT_BOILER_STATUS_T *boilerStatus, unsigned long response)
+{
+    self->m_results[0].m_u16 = OpenTherm::getUInt(response);
+}
+
+void sns_opentherm_tele_generic_uint16_t(struct OpenThermCommandT *self)
+{
+    ResponseAppend_P(PSTR("%d"), (int)self->m_results[0].m_u16);
+}
+
 /////////////////////////////////// Specific Floats Rerports to the  /////////////////////////////////////////////////
 void sns_opentherm_parse_dhw_setpoint(struct OpenThermCommandT *self, struct OT_BOILER_STATUS_T *boilerStatus, unsigned long response)
 {
@@ -419,8 +429,8 @@ void sns_opentherm_parse_boiler_temperature(struct OpenThermCommandT *self, stru
 
 void sns_opentherm_parse_ventilation_capacity(struct OpenThermCommandT *self, struct OT_BOILER_STATUS_T *boilerStatus, unsigned long response)
 {
-    self->m_results[0].m_float = OpenTherm::getFloat(response);
-    boilerStatus->m_ventilation_capacity_read = self->m_results[0].m_float;
+    self->m_results[0].m_u16 = OpenTherm::getUInt(response);
+    boilerStatus->m_ventilation_capacity_read = self->m_results[0].m_u16;
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
